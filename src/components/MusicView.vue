@@ -17,7 +17,6 @@
       </div>
     </div>
     <div class="music-control">
-      <i class="fa fa-heart" aria-hidden="true"></i>
       <i class="fa fa-step-backward" aria-hidden="true" @click="playPrev"></i>
       <i
         class="fa"
@@ -38,11 +37,14 @@
       ></el-slider>
       <div class="total-time">{{ formatTime(duration) }}</div>
     </div>
-    <el-text class="content" :line-clamp="4" type="info">{{ content }}</el-text>
+    <el-text class="content" :line-clamp="4" type="info" style="color: white; font-weight: bold">{{
+      content
+    }}</el-text>
   </div>
 </template>
 
 <script setup lang="ts">
+import axios from 'axios'
 import { ref, onMounted, computed, watch } from 'vue'
 
 const content = ref('')
@@ -63,47 +65,60 @@ interface Music {
   musicUrl: string
   title: string
   author: string
+  duration: number
 }
 
-const playList = ref<Music[]>([
-  {
-    coverUrl:
-      'https://p2.music.126.net/E2tigbpOIoDODSr3wGsQAg==/109951166650063350.jpg?imageView&thumbnail=360y360&quality=75&tostatic=0',
-    musicUrl: 'music/若生命等候.mp3',
-    title: '若生命等候',
-    author: '黄凯芹',
-  },
-  {
-    coverUrl:
-      'https://p2.music.126.net/E2tigbpOIoDODSr3wGsQAg==/109951166650063350.jpg?imageView&thumbnail=360y360&quality=75&tostatic=0',
-    musicUrl: 'music/Style - Taylor Swift.mp3',
-    title: 'Style',
-    author: 'Taylor Swift',
-  },
-])
+const playList = ref<Music[]>([])
+axios
+  .get('http://localhost:9999/api/music/get_info')
+  .then((data) => {
+    playList.value = data.data.data
+    // console.log(data.data)
+  })
+  .catch((err) => {
+    console.log('请求失败')
+    console.log(err)
+  })
 
-const currentMusicIndex = ref(0)
-const currentMusic = computed(() => playList.value[currentMusicIndex.value])
+const currentMusic = computed(() => {
+  if (playList.value.length) {
+    console.log(playList.value[0].musicUrl)
+    return playList.value[0]
+  } else
+    return {
+      title: 'Style',
+      author: 'Taylor Swift',
+      coverUrl: '/music/cover/Style  - Taylor Swift.png',
+      musicUrl: '/music/Taylor Swift - Style.mp3',
+      duration: 231.0,
+    }
+})
 const currentTime = ref(0)
 const duration = ref(0)
 
 const togglePlay = () => {
   musicPlaying.value = !musicPlaying.value
   if (audioPlayer.value) {
-    musicPlaying.value ? audioPlayer.value.play().catch(console.error) : audioPlayer.value.pause()
+    if (musicPlaying.value) {
+      audioPlayer.value.play().catch(() => (musicPlaying.value = false))
+    } else {
+      audioPlayer.value.pause()
+    }
   }
 }
 
 function playPrev() {
-  currentMusicIndex.value =
-    currentMusicIndex.value > 0 ? currentMusicIndex.value - 1 : playList.value.length - 1
-  loadSong(true)
+  if (playList.value.length) {
+    const _ = playList.value.pop()!
+    playList.value.unshift(_)
+  }
 }
 
 function playNext() {
-  currentMusicIndex.value =
-    currentMusicIndex.value < playList.value.length - 1 ? currentMusicIndex.value + 1 : 0
-  loadSong(true)
+  if (playList.value.length) {
+    const _ = playList.value.shift()!
+    playList.value.push(_)
+  }
 }
 
 function loadSong(shouldPlay: boolean) {
@@ -115,8 +130,10 @@ function loadSong(shouldPlay: boolean) {
     audioPlayer.value.onloadeddata = () => {
       isSwitchingSong.value = false
       if (shouldPlay) {
-        audioPlayer.value.play().catch(console.error)
-        musicPlaying.value = true
+        audioPlayer
+          .value!.play()
+          .then(() => (musicPlaying.value = true))
+          .catch(console.error)
       } else {
         musicPlaying.value = false
       }
@@ -143,7 +160,7 @@ function handleSliderInput() {
 function updateCurrentTime() {
   if (audioPlayer.value && !isDraggingSlider.value) {
     currentTime.value = audioPlayer.value.currentTime
-    duration.value = audioPlayer.value.duration || 0
+    duration.value = audioPlayer.value.duration
   }
   isDraggingSlider.value = false
   // 拖动结束后自动播放
@@ -155,7 +172,7 @@ function updateCurrentTime() {
 onMounted(() => {
   if (audioPlayer.value) {
     audioPlayer.value.addEventListener('loadedmetadata', () => {
-      duration.value = audioPlayer.value!.duration || 0
+      duration.value = audioPlayer.value!.duration
     })
   }
   loadSong(false)
@@ -200,10 +217,12 @@ watch(currentTime, (newTime) => {
   font-size: 1.1em;
   font-weight: bold;
   margin-bottom: 0.2em;
+  color: white;
 }
 .music-author {
   font-size: 0.9em;
-  color: #666;
+  color: white;
+  font-weight: bold;
 }
 
 .music-control {
@@ -224,10 +243,9 @@ watch(currentTime, (newTime) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.music-progress {
-  font-size: 0.8em;
+  font-size: 0.9em;
+  color: white;
+  font-weight: bold;
 }
 
 .current-time {
@@ -243,5 +261,6 @@ watch(currentTime, (newTime) => {
 .content {
   margin-top: 1em;
   display: block;
+  text-align: center;
 }
 </style>

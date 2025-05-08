@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>横线信纸效果</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .letter-paper {
+            --line-spacing: 20px;
+            width: 80%;
+            max-width: 600px;
+            height: auto;
+            background-color: #fff;
+            background-image: linear-gradient(180deg, #e6e6e6 1px, transparent 1px);
+            background-size: 100% var(--line-spacing);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: var(--line-spacing);
+            margin-top: 20px;
+        }
+
+        .letter-paper p {
+            margin: 0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 80%;
+            max-width: 600px;
+            height: 150px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="input-container">
+        <input type="number" id="line-spacing-input" placeholder="输入行间距（px）" value="20">
+        <button id="update-spacing-button">更新行间距</button>
+    </div>
+    <textarea id="content-input" placeholder="输入信纸内容">
+亲爱的朋友：
+这是一张模拟的只有横线的信纸，使用 CSS 实现了纸张的横线效果。
+希望你喜欢这种简洁的风格！
+祝好！
+你的朋友
+    </textarea>
+    <button id="update-content-button">更新信纸内容</button>
+    <div class="letter-paper" id="letter-paper">
+        <p>亲爱的朋友：</p>
+        <p>这是一张模拟的只有横线的信纸，使用 CSS 实现了纸张的横线效果。</p>
+        <p>希望你喜欢这种简洁的风格！</p>
+        <p>祝好！</p>
+        <p>你的朋友</p>
+    </div>
+    <script>
+        const letterPaper = document.getElementById('letter-paper');
+        const spacingInput = document.getElementById('line-spacing-input');
+        const updateSpacingButton = document.getElementById('update-spacing-button');
+        const contentInput = document.getElementById('content-input');
+        const updateContentButton = document.getElementById('update-content-button');
+
+        updateSpacingButton.addEventListener('click', () => {
+            const newSpacing = spacingInput.value + 'px';
+            letterPaper.style.setProperty('--line-spacing', newSpacing);
+        });
+
+        updateContentButton.addEventListener('click', () => {
+            const newContent = contentInput.value;
+            const paragraphs = newContent.split('\n').filter(line => line.trim() !== '');
+            letterPaper.innerHTML = '';
+            paragraphs.forEach(paragraph => {
+                const p = document.createElement('p');
+                p.textContent = paragraph;
+                letterPaper.appendChild(p);
+            });
+        });
+    </script>
+</body>
+
+</html>
